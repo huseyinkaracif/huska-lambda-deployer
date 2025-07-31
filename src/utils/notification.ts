@@ -13,6 +13,10 @@ export class NotificationManager {
     vscode.window.showWarningMessage(`⚠️ ${message}`);
   }
 
+  static showInfo(message: string): void {
+    vscode.window.showInformationMessage(`ℹ️ ${message}`);
+  }
+
   static async showProgress(
     title: string,
     task: () => Promise<void>

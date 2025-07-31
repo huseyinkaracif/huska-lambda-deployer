@@ -31,9 +31,11 @@ export class AWSCliManager {
     error?: string;
     output?: string;
   }> {
+    let zipPath: string | null = null;
+
     try {
       // Önce zip dosyası oluştur
-      const zipPath = await this.createZipFile(filePath);
+      zipPath = await this.createZipFile(filePath);
 
       // AWS CLI ile deploy işlemi
       const command = this.buildDeployCommand(zipPath, functionName);
@@ -46,9 +48,6 @@ export class AWSCliManager {
           AWS_DEFAULT_REGION: this.credentials.region,
         },
       });
-
-      // Geçici zip dosyasını temizle
-      this.cleanupTempFile(zipPath);
 
       if (stderr && !stderr.includes("warning")) {
         return {
@@ -66,6 +65,11 @@ export class AWSCliManager {
         success: false,
         error: error instanceof Error ? error.message : "Bilinmeyen hata",
       };
+    } finally {
+      // Her durumda geçici zip dosyasını temizle
+      if (zipPath) {
+        this.cleanupTempFile(zipPath);
+      }
     }
   }
 
@@ -94,9 +98,12 @@ export class AWSCliManager {
     try {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
+        console.log(`Geçici zip dosyası silindi: ${filePath}`);
+        NotificationManager.showInfo("Geçici dosyalar temizlendi");
       }
     } catch (error) {
       console.error("Geçici dosya temizleme hatası:", error);
+      NotificationManager.showWarning("Geçici dosya temizlenirken hata oluştu");
     }
   }
 
@@ -168,9 +175,11 @@ export class AWSCliManager {
     error?: string;
     output?: string;
   }> {
+    let zipPath: string | null = null;
+
     try {
       // Önce zip dosyası oluştur
-      const zipPath = await this.createZipFile(filePath);
+      zipPath = await this.createZipFile(filePath);
 
       const command = `aws lambda update-function-code --function-name ${functionName} --zip-file fileb://${zipPath} --region ${this.credentials.region}`;
 
@@ -182,9 +191,6 @@ export class AWSCliManager {
           AWS_DEFAULT_REGION: this.credentials.region,
         },
       });
-
-      // Geçici zip dosyasını temizle
-      this.cleanupTempFile(zipPath);
 
       if (stderr && !stderr.includes("warning")) {
         return {
@@ -202,6 +208,11 @@ export class AWSCliManager {
         success: false,
         error: error instanceof Error ? error.message : "Bilinmeyen hata",
       };
+    } finally {
+      // Her durumda geçici zip dosyasını temizle
+      if (zipPath) {
+        this.cleanupTempFile(zipPath);
+      }
     }
   }
 
