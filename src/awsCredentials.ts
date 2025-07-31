@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import * as path from "path";
 import { NotificationManager } from "./utils/notification";
@@ -24,16 +23,17 @@ export class AWSCredentialsManager {
         return true;
       }
 
-      // AWS SDK'nın varsayılan credentials'ını kontrol et
-      const credentials = new AWS.Credentials({
-        accessKeyId: "",
-        secretAccessKey: "",
-      });
-      if (credentials.accessKeyId && credentials.secretAccessKey) {
-        return true;
-      }
+      // AWS CLI credentials'ını kontrol et
+      const { exec } = require("child_process");
+      const { promisify } = require("util");
+      const execAsync = promisify(exec);
 
-      return false;
+      try {
+        await execAsync("aws sts get-caller-identity");
+        return true;
+      } catch (error) {
+        return false;
+      }
     } catch (error) {
       console.error("Credentials kontrol hatası:", error);
       return false;

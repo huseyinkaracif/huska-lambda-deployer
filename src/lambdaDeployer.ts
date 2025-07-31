@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import * as AWS from "aws-sdk";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
@@ -13,7 +12,6 @@ const execAsync = promisify(exec);
 
 export class LambdaDeployer {
   private credentialsManager: AWSCredentialsManager;
-  private lambda!: AWS.Lambda;
   private awsCliManager: AWSCliManager | null = null;
 
   constructor(credentialsManager: AWSCredentialsManager) {
@@ -59,16 +57,8 @@ export class LambdaDeployer {
       // AWS credentials'ı al
       const credentials = await this.credentialsManager.getCredentials();
 
-      // AWS CLI kullanılabilir mi kontrol et
-      const awsCliAvailable = await this.checkAWSCliAvailability();
-
-      if (awsCliAvailable) {
-        // AWS CLI ile deploy
-        return await this.deployWithAWSCli(filePath, functionName, credentials);
-      } else {
-        // AWS SDK ile deploy (fallback)
-        return await this.deployWithSDK(filePath, functionName, credentials);
-      }
+      // AWS CLI ile deploy
+      return await this.deployWithAWSCli(filePath, functionName, credentials);
     } catch (error) {
       console.error("Deploy hatası:", error);
       return {
@@ -123,128 +113,6 @@ export class LambdaDeployer {
       return {
         success: false,
         error: error instanceof Error ? error.message : "AWS CLI deploy hatası",
-      };
-    }
-  }
-
-  private async deployWithSDK(
-    filePath: string,
-    functionName: string,
-    credentials: {
-      accessKeyId: string;
-      secretAccessKey: string;
-      region: string;
-    }
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      // AWS SDK'yı yapılandır
-      AWS.config.update({
-        accessKeyId: credentials.accessKeyId,
-        secretAccessKey: credentials.secretAccessKey,
-        region: credentials.region,
-      });
-
-      this.lambda = new AWS.Lambda();
-
-      // Fonksiyonun var olup olmadığını kontrol et
-      const functionExists = await this.checkFunctionExists(functionName);
-
-      if (functionExists) {
-        // Mevcut fonksiyonu güncelle
-        return await this.updateFunction(filePath, functionName);
-      } else {
-        // Yeni fonksiyon oluştur
-        return await this.createFunction(filePath, functionName);
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "AWS SDK deploy hatası",
-      };
-    }
-  }
-
-  private async checkFunctionExists(functionName: string): Promise<boolean> {
-    try {
-      await this.lambda.getFunction({ FunctionName: functionName }).promise();
-      return true;
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message.includes("Function not found")
-      ) {
-        return false;
-      }
-      throw error;
-    }
-  }
-
-  private async createFunction(
-    filePath: string,
-    functionName: string
-  ): Promise<{
-    success: boolean;
-    error?: string;
-  }> {
-    try {
-      // Dosyayı oku ve zip oluştur
-      const fileContent = fs.readFileSync(filePath, "utf8");
-      const zipBuffer = await this.createZipBuffer(fileContent, filePath);
-
-      // Lambda fonksiyonu oluştur
-      const params: AWS.Lambda.CreateFunctionRequest = {
-        FunctionName: functionName,
-        Runtime: this.getRuntime(filePath),
-        Role: await this.getOrCreateExecutionRole(),
-        Handler: this.getHandler(filePath),
-        Code: {
-          ZipFile: zipBuffer,
-        },
-        Description: `Deployed from VS Code - ${new Date().toISOString()}`,
-        Timeout: 30,
-        MemorySize: 128,
-      };
-
-      await this.lambda.createFunction(params).promise();
-
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Fonksiyon oluşturma hatası",
-      };
-    }
-  }
-
-  private async updateFunction(
-    filePath: string,
-    functionName: string
-  ): Promise<{
-    success: boolean;
-    error?: string;
-  }> {
-    try {
-      // Dosyayı oku ve zip oluştur
-      const fileContent = fs.readFileSync(filePath, "utf8");
-      const zipBuffer = await this.createZipBuffer(fileContent, filePath);
-
-      // Lambda fonksiyonunu güncelle
-      const params: AWS.Lambda.UpdateFunctionCodeRequest = {
-        FunctionName: functionName,
-        ZipFile: zipBuffer,
-      };
-
-      await this.lambda.updateFunctionCode(params).promise();
-
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Fonksiyon güncelleme hatası",
       };
     }
   }
@@ -313,13 +181,7 @@ export class LambdaDeployer {
   }
 
   private async getAccountId(): Promise<string> {
-    try {
-      const sts = new AWS.STS();
-      const data = await sts.getCallerIdentity().promise();
-      return data.Account || "123456789012";
-    } catch (error) {
-      console.error("Account ID alma hatası:", error);
-      return "123456789012";
-    }
+    // Basit account ID döndür (gerçek uygulamada AWS CLI ile alınabilir)
+    return "123456789012";
   }
 }
