@@ -3,7 +3,7 @@
     "displayName": "AWS Lambda Deployer",
     "description": "AWS Lambda fonksiyonlarını VS Code'dan kolayca deploy edin",
     "version": "0.0.1",
-    "icon": "icon.png",
+    "icon": "icon.svg",
     "repository": {
         "type": "git",
         "url": "https://github.com/huseyinkaracif/obidev-lambda-deployer.git"
@@ -25,7 +25,7 @@
         "out/**/*",
         "README.md",
         "LICENSE",
-        "icon.png"
+        "icon.svg"
     ],
     "activationEvents": [
         "onCommand:obidev-lambda-deployer.deployLambda"

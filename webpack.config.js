@@ -35,23 +35,6 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    splitChunks: {
-      chunks: "all",
-      cacheGroups: {
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendors",
-          chunks: "all",
-          priority: 10,
-        },
-        aws: {
-          test: /[\\/]node_modules[\\/]aws-sdk[\\/]/,
-          name: "aws-sdk",
-          chunks: "all",
-          priority: 20,
-        },
-      },
-    },
   },
   performance: {
     hints: "warning",
