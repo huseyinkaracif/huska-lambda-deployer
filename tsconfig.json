@@ -7,11 +7,13 @@
       "ES2020",
       "DOM"
     ],
-    "sourceMap": true,
+    "sourceMap": false,
     "rootDir": "src",
     "strict": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "declaration": false,
+    "removeComments": true
   },
   "exclude": [
     "node_modules",

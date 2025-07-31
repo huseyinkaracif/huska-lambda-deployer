@@ -74,6 +74,14 @@ code --extensionDevelopmentPath=.
 - Extension sadece gerekli AWS izinlerini kullanır
 - Credentials şifrelenmiş olarak kaydedilir
 
+## Performans Optimizasyonu
+
+- Webpack ile bundle optimizasyonu
+- Gereksiz dosyalar `.vscodeignore` ile hariç tutulur
+- Source map'ler production'da devre dışı
+- Tree shaking ile kullanılmayan kodlar elenir
+- Vendor chunk'ları ayrı paketlenir
+
 ## Geliştirme
 
 ### Proje Yapısı
@@ -89,7 +97,10 @@ src/
 
 - `npm run compile` - TypeScript'i derle
 - `npm run watch` - Geliştirme modunda izle
-- `npm run vscode:prepublish` - Yayın öncesi hazırlık
+- `npm run bundle` - Webpack ile bundle oluştur
+- `npm run package` - Extension paketi oluştur
+- `npm run publish` - Marketplace'e yayınla
+- `npm run vscode:prepublish` - Yayın öncesi hazırlık (compile + bundle)
 
 ## Katkıda Bulunma
 
