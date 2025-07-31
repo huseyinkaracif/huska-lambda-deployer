@@ -36,6 +36,21 @@
             {
                 "command": "obidev-lambda-deployer.deployLambda",
                 "title": "AWS Deploy Et"
+            },
+            {
+                "command": "obidev-lambda-deployer.resetCredentials",
+                "title": "AWS Credentials Sıfırla",
+                "category": "AWS Lambda Deployer"
+            },
+            {
+                "command": "obidev-lambda-deployer.updateCredentials",
+                "title": "AWS Credentials Güncelle",
+                "category": "AWS Lambda Deployer"
+            },
+            {
+                "command": "obidev-lambda-deployer.showCredentials",
+                "title": "AWS Credentials Göster",
+                "category": "AWS Lambda Deployer"
             }
         ],
         "menus": {

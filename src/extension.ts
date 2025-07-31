@@ -9,7 +9,8 @@ export function activate(context: vscode.ExtensionContext) {
   const credentialsManager = new AWSCredentialsManager(context);
   const lambdaDeployer = new LambdaDeployer(credentialsManager);
 
-  let disposable = vscode.commands.registerCommand(
+  // Deploy Lambda komutu
+  let deployDisposable = vscode.commands.registerCommand(
     "obidev-lambda-deployer.deployLambda",
     async (uri: vscode.Uri) => {
       try {
@@ -52,7 +53,53 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(disposable);
+  // Credentials sıfırlama komutu
+  let resetCredentialsDisposable = vscode.commands.registerCommand(
+    "obidev-lambda-deployer.resetCredentials",
+    async () => {
+      try {
+        await credentialsManager.resetCredentials();
+      } catch (error) {
+        NotificationManager.showError(`Credentials sıfırlama hatası: ${error}`);
+      }
+    }
+  );
+
+  // Credentials güncelleme komutu
+  let updateCredentialsDisposable = vscode.commands.registerCommand(
+    "obidev-lambda-deployer.updateCredentials",
+    async () => {
+      try {
+        await credentialsManager.updateCredentials();
+      } catch (error) {
+        NotificationManager.showError(
+          `Credentials güncelleme hatası: ${error}`
+        );
+      }
+    }
+  );
+
+  // Credentials görüntüleme komutu
+  let showCredentialsDisposable = vscode.commands.registerCommand(
+    "obidev-lambda-deployer.showCredentials",
+    async () => {
+      try {
+        await credentialsManager.showCredentials();
+      } catch (error) {
+        NotificationManager.showError(
+          `Credentials görüntüleme hatası: ${error}`
+        );
+      }
+    }
+  );
+
+  // Tüm komutları context'e ekle
+  context.subscriptions.push(
+    deployDisposable,
+    resetCredentialsDisposable,
+    updateCredentialsDisposable,
+    showCredentialsDisposable
+  );
 }
 
 export function deactivate() {}

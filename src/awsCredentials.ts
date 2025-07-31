@@ -17,23 +17,14 @@ export class AWSCredentialsManager {
 
   async checkCredentials(): Promise<boolean> {
     try {
-      // Önce extension'ın kaydettiği credentials'ı kontrol et
+      // Sadece extension'ın kaydettiği credentials'ı kontrol et
       const savedCredentials = await this.getSavedCredentials();
       if (savedCredentials) {
         return true;
       }
 
-      // AWS CLI credentials'ını kontrol et
-      const { exec } = require("child_process");
-      const { promisify } = require("util");
-      const execAsync = promisify(exec);
-
-      try {
-        await execAsync("aws sts get-caller-identity");
-        return true;
-      } catch (error) {
-        return false;
-      }
+      // Extension'ın kendi credentials'ı yoksa false döndür
+      return false;
     } catch (error) {
       console.error("Credentials kontrol hatası:", error);
       return false;
@@ -235,5 +226,67 @@ export class AWSCredentialsManager {
     throw new Error(
       "AWS credentials bulunamadı. Lütfen önce credentials girin."
     );
+  }
+
+  async resetCredentials(): Promise<void> {
+    try {
+      if (fs.existsSync(this.credentialsPath)) {
+        fs.unlinkSync(this.credentialsPath);
+        NotificationManager.showSuccess(
+          "AWS credentials başarıyla sıfırlandı!"
+        );
+      } else {
+        NotificationManager.showInfo(
+          "Zaten kaydedilmiş credentials bulunmuyor."
+        );
+      }
+    } catch (error) {
+      NotificationManager.showError(`Credentials sıfırlama hatası: ${error}`);
+      throw error;
+    }
+  }
+
+  async updateCredentials(): Promise<void> {
+    try {
+      // Önce mevcut credentials'ı sıfırla
+      await this.resetCredentials();
+
+      // Yeni credentials'ı al
+      await this.promptForCredentials();
+
+      NotificationManager.showSuccess("AWS credentials başarıyla güncellendi!");
+    } catch (error) {
+      NotificationManager.showError(`Credentials güncelleme hatası: ${error}`);
+      throw error;
+    }
+  }
+
+  async showCredentials(): Promise<void> {
+    try {
+      const savedCredentials = await this.getSavedCredentials();
+
+      if (savedCredentials) {
+        const maskedAccessKey =
+          savedCredentials.accessKeyId.substring(0, 4) +
+          "..." +
+          savedCredentials.accessKeyId.substring(
+            savedCredentials.accessKeyId.length - 4
+          );
+        const maskedSecretKey =
+          savedCredentials.secretAccessKey.substring(0, 4) +
+          "..." +
+          savedCredentials.secretAccessKey.substring(
+            savedCredentials.secretAccessKey.length - 4
+          );
+
+        const message = `AWS Credentials Bilgileri:\n\nAccess Key ID: ${maskedAccessKey}\nSecret Access Key: ${maskedSecretKey}\nRegion: ${savedCredentials.region}`;
+
+        await vscode.window.showInformationMessage(message, "Tamam");
+      } else {
+        NotificationManager.showInfo("Kaydedilmiş AWS credentials bulunmuyor.");
+      }
+    } catch (error) {
+      NotificationManager.showError(`Credentials görüntüleme hatası: ${error}`);
+    }
   }
 }
