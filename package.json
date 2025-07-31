@@ -5,9 +5,9 @@
     "version": "0.0.1",
     "repository": {
         "type": "git",
-        "url": "https://github.com/obidev/obidev-lambda-deployer.git"
+        "url": "https://github.com/huseyinkaracif/obidev-lambda-deployer.git"
     },
-    "publisher": "obidev",
+    "publisher": "huseyinkaracif",
     "engines": {
         "vscode": "^1.74.0"
     },

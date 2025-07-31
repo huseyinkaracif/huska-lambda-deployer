@@ -2,6 +2,13 @@
 
 Bu VS Code extension'ı, AWS Lambda fonksiyonlarını doğrudan VS Code'dan kolayca deploy etmenizi sağlar.
 
+## 👨‍💻 Developer
+
+**Hüseyin Karacif**  
+GitHub: [github.com/huseyinkaracif](https://github.com/huseyinkaracif)
+
+---
+
 ## Özellikler
 
 - ✅ Dosyaya sağ tıklayarak "AWS Deploy Et" seçeneği
@@ -25,7 +32,7 @@ Bu VS Code extension'ı, AWS Lambda fonksiyonlarını doğrudan VS Code'dan kola
 
 1. Projeyi klonlayın:
 ```bash
-git clone <repository-url>
+git clone https://github.com/huseyinkaracif/obidev-lambda-deployer.git
 cd obidev-lambda-deployer
 ```
 
