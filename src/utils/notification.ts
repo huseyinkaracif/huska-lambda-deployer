@@ -39,9 +39,9 @@ export class NotificationManager {
     const result = await vscode.window.showWarningMessage(
       message,
       { modal: true },
-      "Evet",
-      "Hayır"
+      "Yes",
+      "No"
     );
-    return result === "Evet";
+    return result === "Yes";
   }
 }

@@ -18,22 +18,22 @@ export class AWSCredentialsManager {
 
   async checkCredentials(): Promise<boolean> {
     try {
-      // Önce extension'ın kaydettiği credentials'ı kontrol et
+      // First, check the credentials saved by the extension
       const savedCredentials = await this.getSavedCredentials();
       if (savedCredentials) {
         return true;
       }
 
-      // AWS profilleri var mı kontrol et
+      // Check if there are AWS profiles
       const hasAwsProfiles = await AWSCliManager.checkAwsCredentialsExist();
       if (hasAwsProfiles) {
         return await this.showProfileSelectionMenu();
       }
 
-      // Hiçbir credentials yoksa false döndür
+      // Return false if no credentials are found
       return false;
     } catch (error) {
-      console.error("Credentials kontrol hatası:", error);
+      console.error("Error checking credentials:", error);
       return false;
     }
   }
@@ -46,27 +46,27 @@ export class AWSCredentialsManager {
         return false;
       }
 
-      // Menü seçeneklerini hazırla
+      // Prepare menu options
       const menuItems: vscode.QuickPickItem[] = [
         {
-          label: "$(plus) Yeni Credentials Gir",
-          description: "Yeni AWS credentials girin",
-          detail: "Manuel olarak yeni AWS credentials gireceksiniz",
+          label: "$(plus) Enter New Credentials",
+          description: "Enter new AWS credentials",
+          detail: "You will manually enter new AWS credentials",
         },
       ];
 
-      // Mevcut profilleri ekle
+      // Add existing profiles
       profiles.forEach((profile) => {
         menuItems.push({
           label: `$(account) ${profile}`,
-          description: `AWS profili: ${profile}`,
-          detail: `Kayıtlı ${profile} profilini kullan`,
+          description: `AWS profile: ${profile}`,
+          detail: `Use the saved ${profile} profile`,
         });
       });
 
       const selectedItem = await vscode.window.showQuickPick(menuItems, {
-        placeHolder: "AWS Credentials seçin",
-        title: "AWS Profil Seçimi",
+        placeHolder: "Select AWS Credentials",
+        title: "AWS Profile Selection",
         ignoreFocusOut: true,
       });
 
@@ -74,20 +74,20 @@ export class AWSCredentialsManager {
         return false;
       }
 
-      // Yeni credentials girme seçildiyse
-      if (selectedItem.label.includes("Yeni Credentials Gir")) {
+      // If "Enter New Credentials" is selected
+      if (selectedItem.label.includes("Enter New Credentials")) {
         await this.promptForCredentials();
         return true;
       }
 
-      // Mevcut profil seçildiyse
+      // If an existing profile is selected
       const profileName = selectedItem.label.replace("$(account) ", "");
       const profileCredentials = await AWSCliManager.getProfileCredentials(
         profileName
       );
 
       if (profileCredentials) {
-        // Profil credentials'ını extension'ın kendi formatında kaydet
+        // Save the profile credentials in the extension's format
         await this.saveCredentials({
           accessKeyId: profileCredentials.accessKeyId,
           secretAccessKey: profileCredentials.secretAccessKey,
@@ -95,18 +95,18 @@ export class AWSCredentialsManager {
         });
 
         NotificationManager.showSuccess(
-          `AWS profili başarıyla yüklendi: ${profileName}`
+          `AWS profile successfully loaded: ${profileName}`
         );
         return true;
       } else {
         NotificationManager.showError(
-          `Profil ${profileName} için geçerli credentials bulunamadı!`
+          `Valid credentials not found for profile ${profileName}!`
         );
         return false;
       }
     } catch (error) {
-      console.error("Profil seçim menüsü hatası:", error);
-      NotificationManager.showError(`Profil seçim hatası: ${error}`);
+      console.error("Error in profile selection menu:", error);
+      NotificationManager.showError(`Profile selection error: ${error}`);
       return false;
     }
   }
@@ -117,69 +117,69 @@ export class AWSCredentialsManager {
 
     while (retryCount < maxRetries) {
       try {
-        // Kullanıcıya bilgi ver
+        // Inform the user
         NotificationManager.showInfo(
-          "AWS Credentials girişi başlıyor. Her alanı dikkatli doldurun."
+          "Starting AWS Credentials entry. Please fill in each field carefully."
         );
 
         // Access Key ID
         const accessKeyId = await vscode.window.showInputBox({
-          prompt: "AWS Access Key ID girin:",
+          prompt: "Enter AWS Access Key ID:",
           password: false,
           placeHolder: "AKIA...",
-          ignoreFocusOut: true, // Input alanının kaybolmasını engelle
+          ignoreFocusOut: true, // Prevent the input box from disappearing
           validateInput: (value) => {
             if (!value || value.trim().length === 0) {
-              return "Access Key ID boş olamaz";
+              return "Access Key ID cannot be empty";
             }
             if (!value.startsWith("AKIA")) {
-              return "Access Key ID 'AKIA' ile başlamalıdır";
+              return "Access Key ID must start with 'AKIA'";
             }
             return null;
           },
         });
 
         if (!accessKeyId) {
-          throw new Error("Access Key ID gerekli");
+          throw new Error("Access Key ID is required");
         }
 
-        // Kısa bir bekleme süresi ekle
+        // Add a short delay
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Secret Access Key
         const secretAccessKey = await vscode.window.showInputBox({
-          prompt: "AWS Secret Access Key girin:",
+          prompt: "Enter AWS Secret Access Key:",
           password: true,
           placeHolder: "Secret key...",
-          ignoreFocusOut: true, // Input alanının kaybolmasını engelle
+          ignoreFocusOut: true, // Prevent the input box from disappearing
           validateInput: (value) => {
             if (!value || value.trim().length === 0) {
-              return "Secret Access Key boş olamaz";
+              return "Secret Access Key cannot be empty";
             }
             if (value.length < 20) {
-              return "Secret Access Key çok kısa";
+              return "Secret Access Key is too short";
             }
             return null;
           },
         });
 
         if (!secretAccessKey) {
-          throw new Error("Secret Access Key gerekli");
+          throw new Error("Secret Access Key is required");
         }
 
-        // Kısa bir bekleme süresi ekle
+        // Add a short delay
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Region
         const region = await vscode.window.showInputBox({
-          prompt: "AWS Region girin (örn: us-east-1):",
+          prompt: "Enter AWS Region (e.g., us-east-1):",
           password: false,
           placeHolder: "us-east-1",
           value: "us-east-1",
-          ignoreFocusOut: true, // Input alanının kaybolmasını engelle
+          ignoreFocusOut: true, // Prevent the input box from disappearing
           validateInput: (value) => {
             if (!value || value.trim().length === 0) {
-              return "Region boş olamaz";
+              return "Region cannot be empty";
             }
             const validRegions = [
               "us-east-1",
@@ -192,48 +192,46 @@ export class AWSCredentialsManager {
               "ap-southeast-2",
             ];
             if (!validRegions.includes(value)) {
-              return "Geçerli bir AWS region girin";
+              return "Enter a valid AWS region";
             }
             return null;
           },
         });
 
         if (!region) {
-          throw new Error("Region gerekli");
+          throw new Error("Region is required");
         }
 
-        // Credentials'ı kaydet
+        // Save the credentials
         await this.saveCredentials({
           accessKeyId,
           secretAccessKey,
           region,
         });
 
-        NotificationManager.showSuccess(
-          "AWS credentials başarıyla kaydedildi!"
-        );
+        NotificationManager.showSuccess("AWS credentials successfully saved!");
 
-        // Başarılı olursa döngüden çık
+        // Exit the loop if successful
         break;
       } catch (error) {
         retryCount++;
 
         if (retryCount >= maxRetries) {
           NotificationManager.showError(
-            `Credentials girişi başarısız oldu. Lütfen tekrar deneyin. Hata: ${error}`
+            `Credentials entry failed. Please try again. Error: ${error}`
           );
           throw error;
         }
 
         const retry = await NotificationManager.showConfirmation(
-          `Credentials girişi sırasında hata oluştu. Tekrar denemek ister misiniz? (${retryCount}/${maxRetries})`
+          `An error occurred during credentials entry. Would you like to try again? (${retryCount}/${maxRetries})`
         );
 
         if (!retry) {
-          throw new Error("Kullanıcı tarafından iptal edildi");
+          throw new Error("Cancelled by user");
         }
 
-        // Kısa bir bekleme süresi
+        // Add a short delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
@@ -245,13 +243,13 @@ export class AWSCredentialsManager {
     region: string;
   }): Promise<void> {
     try {
-      // Global storage dizinini oluştur
+      // Create the global storage directory if it doesn't exist
       const dir = path.dirname(this.credentialsPath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
 
-      // Credentials'ı şifrele ve kaydet
+      // Encrypt and save the credentials
       const encryptedCredentials = {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
@@ -264,7 +262,7 @@ export class AWSCredentialsManager {
         JSON.stringify(encryptedCredentials, null, 2)
       );
     } catch (error) {
-      console.error("Credentials kaydetme hatası:", error);
+      console.error("Error saving credentials:", error);
       throw error;
     }
   }
@@ -288,7 +286,7 @@ export class AWSCredentialsManager {
         region: credentials.region,
       };
     } catch (error) {
-      console.error("Kaydedilmiş credentials okuma hatası:", error);
+      console.error("Error reading saved credentials:", error);
       return null;
     }
   }
@@ -303,40 +301,34 @@ export class AWSCredentialsManager {
       return savedCredentials;
     }
 
-    throw new Error(
-      "AWS credentials bulunamadı. Lütfen önce credentials girin."
-    );
+    throw new Error("AWS credentials not found. Please enter them first.");
   }
 
   async resetCredentials(): Promise<void> {
     try {
       if (fs.existsSync(this.credentialsPath)) {
         fs.unlinkSync(this.credentialsPath);
-        NotificationManager.showSuccess(
-          "AWS credentials başarıyla sıfırlandı!"
-        );
+        NotificationManager.showSuccess("AWS credentials successfully reset!");
       } else {
-        NotificationManager.showInfo(
-          "Zaten kaydedilmiş credentials bulunmuyor."
-        );
+        NotificationManager.showInfo("No saved credentials found.");
       }
     } catch (error) {
-      NotificationManager.showError(`Credentials sıfırlama hatası: ${error}`);
+      NotificationManager.showError(`Error resetting credentials: ${error}`);
       throw error;
     }
   }
 
   async updateCredentials(): Promise<void> {
     try {
-      // Önce mevcut credentials'ı sıfırla
+      // First, reset the current credentials
       await this.resetCredentials();
 
-      // Yeni credentials'ı al
+      // Get new credentials
       await this.promptForCredentials();
 
-      NotificationManager.showSuccess("AWS credentials başarıyla güncellendi!");
+      NotificationManager.showSuccess("AWS credentials successfully updated!");
     } catch (error) {
-      NotificationManager.showError(`Credentials güncelleme hatası: ${error}`);
+      NotificationManager.showError(`Error updating credentials: ${error}`);
       throw error;
     }
   }
@@ -359,14 +351,14 @@ export class AWSCredentialsManager {
             savedCredentials.secretAccessKey.length - 4
           );
 
-        const message = `AWS Credentials Bilgileri:\n\nAccess Key ID: ${maskedAccessKey}\nSecret Access Key: ${maskedSecretKey}\nRegion: ${savedCredentials.region}`;
+        const message = `AWS Credentials Information:\n\nAccess Key ID: ${maskedAccessKey}\nSecret Access Key: ${maskedSecretKey}\nRegion: ${savedCredentials.region}`;
 
-        await vscode.window.showInformationMessage(message, "Tamam");
+        await vscode.window.showInformationMessage(message, "OK");
       } else {
-        NotificationManager.showInfo("Kaydedilmiş AWS credentials bulunmuyor.");
+        NotificationManager.showInfo("No saved AWS credentials found.");
       }
     } catch (error) {
-      NotificationManager.showError(`Credentials görüntüleme hatası: ${error}`);
+      NotificationManager.showError(`Error displaying credentials: ${error}`);
     }
   }
 }

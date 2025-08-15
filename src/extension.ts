@@ -9,92 +9,88 @@ export function activate(context: vscode.ExtensionContext) {
   const credentialsManager = new AWSCredentialsManager(context);
   const lambdaDeployer = new LambdaDeployer(credentialsManager);
 
-  // Deploy Lambda komutu
+  // Deploy Lambda command
   let deployDisposable = vscode.commands.registerCommand(
     "huska-lambda-deployer.deployLambda",
     async (uri: vscode.Uri) => {
       try {
-        // Seçilen dosyanın path'ini al
+        // Get the path of the selected file
         const filePath = uri.fsPath;
 
-        // AWS credentials kontrolü
+        // Check AWS credentials
         const hasCredentials = await credentialsManager.checkCredentials();
         if (!hasCredentials) {
-          NotificationManager.showError("AWS credentials ayarlanamadı!");
+          NotificationManager.showError("AWS credentials could not be set!");
           return;
         }
 
-        // Lambda fonksiyon adını al
+        // Get the Lambda function name
         const functionName = await lambdaDeployer.getFunctionName(filePath);
 
-        // Progress ile deploy işlemini başlat
+        // Start the deploy process with progress
         await NotificationManager.showProgress(
-          `Lambda deploy ediliyor: ${functionName}`,
+          `Deploying Lambda: ${functionName}`,
           async () => {
             const result = await lambdaDeployer.deployLambda(
               filePath,
               functionName
             );
 
-            // Sonucu kullanıcıya bildir
+            // Notify the user of the result
             if (result.success) {
               NotificationManager.showSuccess(
-                `Lambda başarıyla deploy edildi: ${functionName}`
+                `Lambda successfully deployed: ${functionName}`
               );
             } else {
-              NotificationManager.showError(`Deploy hatası: ${result.error}`);
+              NotificationManager.showError(`Deploy error: ${result.error}`);
             }
           }
         );
       } catch (error) {
         NotificationManager.showError(
-          `Deploy işlemi sırasında hata oluştu: ${error}`
+          `An error occurred during the deploy process: ${error}`
         );
       }
     }
   );
 
-  // Credentials sıfırlama komutu
+  // Reset credentials command
   let resetCredentialsDisposable = vscode.commands.registerCommand(
     "huska-lambda-deployer.resetCredentials",
     async () => {
       try {
         await credentialsManager.resetCredentials();
       } catch (error) {
-        NotificationManager.showError(`Credentials sıfırlama hatası: ${error}`);
+        NotificationManager.showError(`Error resetting credentials: ${error}`);
       }
     }
   );
 
-  // Credentials güncelleme komutu
+  // Update credentials command
   let updateCredentialsDisposable = vscode.commands.registerCommand(
     "huska-lambda-deployer.updateCredentials",
     async () => {
       try {
         await credentialsManager.updateCredentials();
       } catch (error) {
-        NotificationManager.showError(
-          `Credentials güncelleme hatası: ${error}`
-        );
+        NotificationManager.showError(`Error updating credentials: ${error}`);
       }
     }
   );
 
-  // Credentials görüntüleme komutu
+  // Show credentials command
   let showCredentialsDisposable = vscode.commands.registerCommand(
     "huska-lambda-deployer.showCredentials",
     async () => {
       try {
         await credentialsManager.showCredentials();
       } catch (error) {
-        NotificationManager.showError(
-          `Credentials görüntüleme hatası: ${error}`
-        );
+        NotificationManager.showError(`Error displaying credentials: ${error}`);
       }
     }
   );
 
-  // Tüm komutları context'e ekle
+  // Add all commands to context
   context.subscriptions.push(
     deployDisposable,
     resetCredentialsDisposable,
