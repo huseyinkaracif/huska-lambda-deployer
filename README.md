@@ -20,6 +20,12 @@ GitHub: [github.com/huseyinkaracif](https://github.com/huseyinkaracif)
 - 📊 Progress indicator
 - 🎯 Advanced error management
 
+## Usage
+
+![Lambda Deployer](https://raw.githubusercontent.com/huseyinkaracif/huska-lambda-deployer/refs/heads/main/img/lambda.png)
+
+![Usage](https://raw.githubusercontent.com/huseyinkaracif/huska-lambda-deployer/refs/heads/main/img/usage-1.png)
+
 ## Bug Reports
 
 For bug reports, please visit: [GitHub Issues](https://github.com/huseyinkaracif/huska-lambda-deployer/issues/new)
