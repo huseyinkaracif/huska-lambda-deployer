@@ -1,6 +1,6 @@
 # AWS Lambda Deployer - VS Code Extension
 
-Bu VS Code extension'ı, AWS Lambda fonksiyonlarını doğrudan VS Code'dan kolayca deploy etmenizi sağlar.
+This VS Code extension allows you to easily deploy AWS Lambda functions directly from VS Code.
 
 ## 👨‍💻 Developer
 
@@ -9,13 +9,17 @@ GitHub: [github.com/huseyinkaracif](https://github.com/huseyinkaracif)
 
 ---
 
-## Özellikler
+## Features
 
-- ✅ Dosyaya sağ tıklayarak "AWS Deploy Et" seçeneği
-- 🔐 AWS Credentials yönetimi
-- 🚀 Otomatik Lambda fonksiyon oluşturma/güncelleme
-- 📝 Çoklu dil desteği (JavaScript, TypeScript, Python, Java)
-- 💾 Güvenli credentials saklama
-- 🔄 AWS CLI ve SDK desteği (otomatik seçim)
-- 📊 Progress göstergesi
-- 🎯 Gelişmiş hata yönetimi
+- ✅ Right-click on a file to select "Deploy to AWS"
+- 🔐 AWS Credentials management
+- 🚀 Automatic Lambda function creation/update
+- 📝 Multi-language support (JavaScript, TypeScript, Python, Java)
+- 💾 Secure credentials storage
+- 🔄 AWS CLI and SDK support (automatic selection)
+- 📊 Progress indicator
+- 🎯 Advanced error management
+
+## Bug Reports
+
+For bug reports, please visit: [GitHub Issues](https://github.com/huseyinkaracif/huska-lambda-deployer/issues/new)
