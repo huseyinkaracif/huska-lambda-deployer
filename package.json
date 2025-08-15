@@ -2,7 +2,7 @@
     "name": "huska-lambda-deployer",
     "displayName": "AWS Lambda Deployer",
     "description": "AWS Lambda fonksiyonlarını VS Code'dan kolayca deploy edin",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "icon": "icon.png",
     "repository": {
         "type": "git",
