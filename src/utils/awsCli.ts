@@ -3,6 +3,7 @@ import { promisify } from "util";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 import JSZip from "jszip";
 import { NotificationManager } from "./notification";
 
@@ -233,5 +234,139 @@ export class AWSCliManager {
     } catch (error) {
       return false;
     }
+  }
+
+  // Static metodlar - credentials olmadan kullanılabilir
+  static async getAwsProfiles(): Promise<string[]> {
+    try {
+      const credentialsPath = path.join(os.homedir(), '.aws', 'credentials');
+      const configPath = path.join(os.homedir(), '.aws', 'config');
+      
+      const profiles = new Set<string>();
+
+      // credentials dosyasından profilleri oku
+      if (fs.existsSync(credentialsPath)) {
+        const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+        const credentialProfiles = this.parseAwsConfigProfiles(credentialsContent);
+        credentialProfiles.forEach(profile => profiles.add(profile));
+      }
+
+      // config dosyasından profilleri oku
+      if (fs.existsSync(configPath)) {
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        const configProfiles = this.parseAwsConfigProfiles(configContent, true);
+        configProfiles.forEach(profile => profiles.add(profile));
+      }
+
+      return Array.from(profiles).sort();
+    } catch (error) {
+      console.error('AWS profilleri okunamadı:', error);
+      return [];
+    }
+  }
+
+  static async checkAwsCredentialsExist(): Promise<boolean> {
+    try {
+      const credentialsPath = path.join(os.homedir(), '.aws', 'credentials');
+      const configPath = path.join(os.homedir(), '.aws', 'config');
+      
+      return fs.existsSync(credentialsPath) || fs.existsSync(configPath);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  static async getProfileCredentials(profileName: string): Promise<{
+    accessKeyId: string;
+    secretAccessKey: string;
+    region: string;
+  } | null> {
+    try {
+      const credentialsPath = path.join(os.homedir(), '.aws', 'credentials');
+      const configPath = path.join(os.homedir(), '.aws', 'config');
+      
+      let accessKeyId = '';
+      let secretAccessKey = '';
+      let region = 'us-east-1'; // default region
+
+      // credentials dosyasından access key ve secret key'i al
+      if (fs.existsSync(credentialsPath)) {
+        const credentialsContent = fs.readFileSync(credentialsPath, 'utf8');
+        const credentials = this.parseAwsCredentials(credentialsContent, profileName);
+        if (credentials) {
+          accessKeyId = credentials.aws_access_key_id || '';
+          secretAccessKey = credentials.aws_secret_access_key || '';
+        }
+      }
+
+      // config dosyasından region'ı al
+      if (fs.existsSync(configPath)) {
+        const configContent = fs.readFileSync(configPath, 'utf8');
+        const configData = this.parseAwsCredentials(configContent, profileName, true);
+        if (configData && configData.region) {
+          region = configData.region;
+        }
+      }
+
+      if (accessKeyId && secretAccessKey) {
+        return {
+          accessKeyId,
+          secretAccessKey,
+          region
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Profil ${profileName} için credentials okunamadı:`, error);
+      return null;
+    }
+  }
+
+  private static parseAwsConfigProfiles(content: string, isConfig = false): string[] {
+    const profiles: string[] = [];
+    const lines = content.split('\n');
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        let profileName = trimmed.slice(1, -1);
+        
+        // config dosyasında profiller 'profile ' prefix'i ile başlar (default hariç)
+        if (isConfig && profileName.startsWith('profile ')) {
+          profileName = profileName.replace('profile ', '');
+        }
+        
+        profiles.push(profileName);
+      }
+    }
+    
+    return profiles;
+  }
+
+  private static parseAwsCredentials(content: string, profileName: string, isConfig = false): any {
+    const lines = content.split('\n');
+    let currentProfile = '';
+    let inTargetProfile = false;
+    const credentials: any = {};
+    
+    const targetProfileName = isConfig && profileName !== 'default' ? `profile ${profileName}` : profileName;
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        currentProfile = trimmed.slice(1, -1);
+        inTargetProfile = currentProfile === targetProfileName;
+        continue;
+      }
+      
+      if (inTargetProfile && trimmed.includes('=')) {
+        const [key, value] = trimmed.split('=').map(s => s.trim());
+        credentials[key] = value;
+      }
+    }
+    
+    return Object.keys(credentials).length > 0 ? credentials : null;
   }
 }

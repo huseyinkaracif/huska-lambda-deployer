@@ -1,5 +1,5 @@
 {
-    "name": "obidev-lambda-deployer",
+    "name": "huska-lambda-deployer",
     "displayName": "AWS Lambda Deployer",
     "description": "AWS Lambda fonksiyonlarını VS Code'dan kolayca deploy edin",
     "version": "0.0.1",
@@ -28,27 +28,27 @@
         "icon.png"
     ],
     "activationEvents": [
-        "onCommand:obidev-lambda-deployer.deployLambda"
+        "onCommand:huska-lambda-deployer.deployLambda"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "obidev-lambda-deployer.deployLambda",
+                "command": "huska-lambda-deployer.deployLambda",
                 "title": "AWS Deploy Et"
             },
             {
-                "command": "obidev-lambda-deployer.resetCredentials",
+                "command": "huska-lambda-deployer.resetCredentials",
                 "title": "AWS Credentials Sıfırla",
                 "category": "AWS Lambda Deployer"
             },
             {
-                "command": "obidev-lambda-deployer.updateCredentials",
+                "command": "huska-lambda-deployer.updateCredentials",
                 "title": "AWS Credentials Güncelle",
                 "category": "AWS Lambda Deployer"
             },
             {
-                "command": "obidev-lambda-deployer.showCredentials",
+                "command": "huska-lambda-deployer.showCredentials",
                 "title": "AWS Credentials Göster",
                 "category": "AWS Lambda Deployer"
             }
@@ -56,7 +56,7 @@
         "menus": {
             "explorer/context": [
                 {
-                    "command": "obidev-lambda-deployer.deployLambda",
+                    "command": "huska-lambda-deployer.deployLambda",
                     "group": "navigation",
                     "when": "resourceExtname == .js || resourceExtname == .mjs || resourceExtname == .ts || resourceExtname == .py || resourceExtname == .java"
                 }

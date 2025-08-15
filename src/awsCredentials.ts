@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import { NotificationManager } from "./utils/notification";
+import { AWSCliManager } from "./utils/awsCli";
 
 export class AWSCredentialsManager {
   private context: vscode.ExtensionContext;
@@ -17,16 +18,95 @@ export class AWSCredentialsManager {
 
   async checkCredentials(): Promise<boolean> {
     try {
-      // Sadece extension'ın kaydettiği credentials'ı kontrol et
+      // Önce extension'ın kaydettiği credentials'ı kontrol et
       const savedCredentials = await this.getSavedCredentials();
       if (savedCredentials) {
         return true;
       }
 
-      // Extension'ın kendi credentials'ı yoksa false döndür
+      // AWS profilleri var mı kontrol et
+      const hasAwsProfiles = await AWSCliManager.checkAwsCredentialsExist();
+      if (hasAwsProfiles) {
+        return await this.showProfileSelectionMenu();
+      }
+
+      // Hiçbir credentials yoksa false döndür
       return false;
     } catch (error) {
       console.error("Credentials kontrol hatası:", error);
+      return false;
+    }
+  }
+
+  async showProfileSelectionMenu(): Promise<boolean> {
+    try {
+      const profiles = await AWSCliManager.getAwsProfiles();
+
+      if (profiles.length === 0) {
+        return false;
+      }
+
+      // Menü seçeneklerini hazırla
+      const menuItems: vscode.QuickPickItem[] = [
+        {
+          label: "$(plus) Yeni Credentials Gir",
+          description: "Yeni AWS credentials girin",
+          detail: "Manuel olarak yeni AWS credentials gireceksiniz",
+        },
+      ];
+
+      // Mevcut profilleri ekle
+      profiles.forEach((profile) => {
+        menuItems.push({
+          label: `$(account) ${profile}`,
+          description: `AWS profili: ${profile}`,
+          detail: `Kayıtlı ${profile} profilini kullan`,
+        });
+      });
+
+      const selectedItem = await vscode.window.showQuickPick(menuItems, {
+        placeHolder: "AWS Credentials seçin",
+        title: "AWS Profil Seçimi",
+        ignoreFocusOut: true,
+      });
+
+      if (!selectedItem) {
+        return false;
+      }
+
+      // Yeni credentials girme seçildiyse
+      if (selectedItem.label.includes("Yeni Credentials Gir")) {
+        await this.promptForCredentials();
+        return true;
+      }
+
+      // Mevcut profil seçildiyse
+      const profileName = selectedItem.label.replace("$(account) ", "");
+      const profileCredentials = await AWSCliManager.getProfileCredentials(
+        profileName
+      );
+
+      if (profileCredentials) {
+        // Profil credentials'ını extension'ın kendi formatında kaydet
+        await this.saveCredentials({
+          accessKeyId: profileCredentials.accessKeyId,
+          secretAccessKey: profileCredentials.secretAccessKey,
+          region: profileCredentials.region,
+        });
+
+        NotificationManager.showSuccess(
+          `AWS profili başarıyla yüklendi: ${profileName}`
+        );
+        return true;
+      } else {
+        NotificationManager.showError(
+          `Profil ${profileName} için geçerli credentials bulunamadı!`
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error("Profil seçim menüsü hatası:", error);
+      NotificationManager.showError(`Profil seçim hatası: ${error}`);
       return false;
     }
   }

@@ -11,7 +11,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Deploy Lambda komutu
   let deployDisposable = vscode.commands.registerCommand(
-    "obidev-lambda-deployer.deployLambda",
+    "huska-lambda-deployer.deployLambda",
     async (uri: vscode.Uri) => {
       try {
         // Seçilen dosyanın path'ini al
@@ -20,7 +20,8 @@ export function activate(context: vscode.ExtensionContext) {
         // AWS credentials kontrolü
         const hasCredentials = await credentialsManager.checkCredentials();
         if (!hasCredentials) {
-          await credentialsManager.promptForCredentials();
+          NotificationManager.showError("AWS credentials ayarlanamadı!");
+          return;
         }
 
         // Lambda fonksiyon adını al
@@ -55,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Credentials sıfırlama komutu
   let resetCredentialsDisposable = vscode.commands.registerCommand(
-    "obidev-lambda-deployer.resetCredentials",
+    "huska-lambda-deployer.resetCredentials",
     async () => {
       try {
         await credentialsManager.resetCredentials();
@@ -67,7 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Credentials güncelleme komutu
   let updateCredentialsDisposable = vscode.commands.registerCommand(
-    "obidev-lambda-deployer.updateCredentials",
+    "huska-lambda-deployer.updateCredentials",
     async () => {
       try {
         await credentialsManager.updateCredentials();
@@ -81,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Credentials görüntüleme komutu
   let showCredentialsDisposable = vscode.commands.registerCommand(
-    "obidev-lambda-deployer.showCredentials",
+    "huska-lambda-deployer.showCredentials",
     async () => {
       try {
         await credentialsManager.showCredentials();
